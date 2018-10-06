@@ -7,7 +7,9 @@ class App extends Component {
     super(props)
 
     this.state = {
-      formShown: false
+      userAddress: '',
+      formShown: false,
+      metaMaskEnabled: this.metaMaskEnabled,
     }
 
     this.toggleForm = this.toggleForm.bind(this)
@@ -16,8 +18,14 @@ class App extends Component {
   
   toggleForm () {
     this.setState({
-      formShown: !this.state.formShown
+      formShown: !this.state.formShown,
     })
+
+    if (!this.state.formShown) {
+      this.setState({
+        userAddress: window.web3.eth.coinbase
+      })
+    }
   }
 
   submitTransaction () {
@@ -42,8 +50,9 @@ class App extends Component {
       <div className='contentContainer'>
         {
           this.state.formShown
-          ? <TransactionForm 
-              onSubmit={this.submitTransaction}/>
+          ? <TransactionForm
+              onSubmit={this.submitTransaction}
+              userAddress={this.state.userAddress}/>
           : <div className='contentContainer'>
               <p>MetaMask is enabled, welcome to bat-guano-dev!</p>
               <p>Click the button below to get started</p>
@@ -57,12 +66,10 @@ class App extends Component {
   }
 
   render () {
-    const metaMask = this.metaMaskEnabled()
-
     return (
       <div className='app'>
         {
-          metaMask
+          this.state.metaMaskEnabled
           ? this.mainContent()
           : this.metaMaskError()
         }

@@ -75,7 +75,6 @@ export default class TransactionForm extends Component {
   }
 
   validateForm () {
-    console.log(this.state)
     if (!this.state.amount || !this.state.recipient) {
       window.alert('One of the values was not filled out')
       return
@@ -118,8 +117,15 @@ export default class TransactionForm extends Component {
   }
 
   render () {
+    const { userAddress } = this.props
+
     return (
       <>
+        {
+          userAddress.length > 0
+          ? <h3>Your Address is: {userAddress}</h3>
+          : null
+        }
         <TextInput
           title={'Recipient Address'}
           name={'recipient'}
