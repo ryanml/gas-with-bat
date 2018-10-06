@@ -75,13 +75,15 @@ export default class TransactionForm extends Component {
   }
 
   validateForm () {
-    if (!this.state.amount || !this.state.recipient) {
-      window.alert('One of the values was not filled out')
-      return
+    for (let key in this.state) {
+      if (!this.state[key]) {
+        console.log('One of the values was not filled out')
+        return
+      }
     }
 
     if (this.props.onSubmit) {
-      this.props.onSubmit()
+      this.props.onSubmit(this.state)
     }
   }
 

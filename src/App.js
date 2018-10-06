@@ -9,11 +9,15 @@ class App extends Component {
     this.state = {
       userAddress: '',
       formShown: false,
+      processing: false,
+      transactionError: false,
       metaMaskEnabled: this.metaMaskEnabled,
     }
 
     this.toggleForm = this.toggleForm.bind(this)
     this.mainContent = this.mainContent.bind(this)
+    this.submitTransaction = this.submitTransaction.bind(this)
+    this.onTransactionProcessed = this.onTransactionProcessed.bind(this)
   }
   
   toggleForm () {
@@ -28,8 +32,37 @@ class App extends Component {
     }
   }
 
-  submitTransaction () {
-    window.alert('Form Submit Action')
+  submitTransaction (formState) {
+    const addressesValid = (
+      window.web3.isAddress(this.state.userAddress) &&
+      window.web3.isAddress(formState.recipient)
+    )
+    const transferAmount = parseInt(formState.amount) || false
+
+    if (!transferAmount ||
+        !addressesValid ||
+        !this.metaMaskEnabled()
+       ) {
+      console.log('Couldn\'t process transaction')
+      return
+    }
+
+    this.setState({
+      processing: true
+    })
+
+    window.web3.eth.sendTransaction({
+      to: formState.recipient,
+      from: this.state.userAddress,
+      value: transferAmount
+    }, this.onTransactionProcessed)
+  }
+
+  onTransactionProcessed (error, result) {
+    this.setState({
+      processing: false,
+      transactionError: error
+    })
   }
 
   metaMaskEnabled () {
@@ -48,6 +81,11 @@ class App extends Component {
   mainContent () {
     return (
       <div className='contentContainer'>
+        {
+          this.state.transactionError
+          ? <strong>Couldn't process last transaction</strong>
+          : null
+        }
         {
           this.state.formShown
           ? <TransactionForm
