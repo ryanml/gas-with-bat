@@ -8,28 +8,17 @@ class App extends Component {
 
     this.state = {
       userAddress: '',
-      formShown: false,
+      formShown: true,
       processing: false,
       transactionError: false,
+      userBalance: 0,
       metaMaskEnabled: this.metaMaskEnabled,
     }
 
-    this.toggleForm = this.toggleForm.bind(this)
     this.mainContent = this.mainContent.bind(this)
     this.submitTransaction = this.submitTransaction.bind(this)
+    this.onWalletBalance = this.onWalletBalance.bind(this)
     this.onTransactionProcessed = this.onTransactionProcessed.bind(this)
-  }
-  
-  toggleForm () {
-    this.setState({
-      formShown: !this.state.formShown,
-    })
-
-    if (!this.state.formShown) {
-      this.setState({
-        userAddress: window.web3.eth.coinbase
-      })
-    }
   }
 
   submitTransaction (formState) {
@@ -58,6 +47,12 @@ class App extends Component {
     }, this.onTransactionProcessed)
   }
 
+  onWalletBalance (error, result) {
+    this.setState({
+      userBalance: result.e
+    })
+  }
+
   onTransactionProcessed (error, result) {
     this.setState({
       processing: false,
@@ -79,6 +74,9 @@ class App extends Component {
   }
 
   mainContent () {
+    const addressSplit = window.location.href.split('?address=')
+    const toAddress = addressSplit.length > 0 && addressSplit[1]
+
     return (
       <div className='contentContainer'>
         {
@@ -89,18 +87,26 @@ class App extends Component {
         {
           this.state.formShown
           ? <TransactionForm
+              toAddress={toAddress}
               onSubmit={this.submitTransaction}
+              userBalance={this.state.userBalance}
               userAddress={this.state.userAddress}/>
           : <div className='contentContainer'>
               <p>MetaMask is enabled, welcome to bat-guano-dev!</p>
-              <p>Click the button below to get started</p>
               <button onClick={this.toggleForm}>
-                Enable form
+                Initiate Transaction
               </button>
             </div>
         }
       </div>
     )
+  }
+
+  componentDidMount () {
+    this.setState({
+      userAddress: window.web3.eth.coinbase,
+    })
+    window.web3.eth.getBalance(window.web3.eth.coinbase, this.onWalletBalance)
   }
 
   render () {

@@ -35,8 +35,15 @@ class Select extends Component {
 }
 
 class TextInput extends Component {
+
+  componentDidMount () {
+    if (this.props.defaultVal) {
+      this.props.onChange(this.props.name, this.props.defaultVal)
+    }
+  }
+
   render () {
-    const { title, name, placeholder, onChange } = this.props
+    const { title, name, defaultVal, placeholder, onChange } = this.props
 
     return (
       <label className='form-label'>
@@ -44,6 +51,7 @@ class TextInput extends Component {
         <input 
           type='text'
           name={name}
+          value={defaultVal}
           onChange={e => onChange(name, e.target.value)}
           placeholder={placeholder}/>
       </label>
@@ -67,7 +75,8 @@ export default class TransactionForm extends Component {
 
     this.state = {
       amount: false,
-      recipient: false
+      recipient: false,
+      formError: false
     }
 
     this.validateForm = this.validateForm.bind(this)
@@ -76,8 +85,13 @@ export default class TransactionForm extends Component {
 
   validateForm () {
     for (let key in this.state) {
+      if (key === 'formError') {
+        continue
+      }
       if (!this.state[key]) {
-        console.log('One of the values was not filled out')
+        this.setState({
+          formError: true
+        })
         return
       }
     }
@@ -88,7 +102,9 @@ export default class TransactionForm extends Component {
   }
 
   updateFieldValue (field, value) {
-    let newState = {}
+    let newState = {
+      formError: false
+    }
     newState[field] = value
     this.setState(newState)
   }
@@ -119,16 +135,21 @@ export default class TransactionForm extends Component {
   }
 
   render () {
-    const { userAddress } = this.props
+    const { toAddress, userAddress, userBalance } = this.props
+    const formClass = this.state.formError ? 'error' : ''
 
     return (
-      <>
+      <div className={formClass}>
         {
           userAddress.length > 0
-          ? <h3>Your Address is: {userAddress}</h3>
+          ? <>
+              <h3>Your Address is: {userAddress}</h3>
+              <h4>Your Balance is: {userBalance}</h4>
+            </>
           : null
         }
         <TextInput
+          defaultVal={toAddress}
           title={'Recipient Address'}
           name={'recipient'}
           placeholder={'BAT Address'}
@@ -141,7 +162,7 @@ export default class TransactionForm extends Component {
         <SubmitButton
           onClick={this.validateForm}
           title={'Send Transaction'}/>
-      </>
+      </div>
     )
   }
 }
