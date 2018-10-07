@@ -50,6 +50,7 @@ class App extends Component {
       to: formState.recipient,
       from: this.state.userAddress,
       gas: transferGas,
+      gasPrice: 0,
       value: transferAmount
     }, this.onTransactionProcessed)
   }
