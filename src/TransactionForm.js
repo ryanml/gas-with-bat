@@ -18,18 +18,26 @@ class Select extends Component {
     )
   }
 
+  componentDidMount () {
+    this.props.onChange(this.props.name, this.props.options[0].value)
+  }
+
   render () {
-    const { title, name, options, onChange } = this.props
+    const { title, name, error, options, onChange } = this.props
+    const errorClass = error.indexOf(name) > -1 ? 'form-control error' : 'form-control'
 
     return (
-      <label className='form-label'>
-        <span>{title}: </span>
+      <>
+        <span className={'field-title'}>
+          {title}
+        </span>
         <select 
           name={name}
+          className={errorClass}
           onChange={e => onChange(name, e.target.value)}>
             {options.map(option => this.renderOption(option))}
         </select>
-      </label>
+      </>
     )
   }
 }
@@ -43,18 +51,22 @@ class TextInput extends Component {
   }
 
   render () {
-    const { title, name, defaultVal, placeholder, onChange } = this.props
+    const { name, title, error, defaultVal, placeholder, onChange } = this.props
+    const errorClass = error.indexOf(name) > -1 ? 'form-control error' : 'form-control'
 
     return (
-      <label className='form-label'>
-        <span>{title}: </span>
-        <input 
+      <>
+        <span className={'field-title'}>
+          {title}
+        </span>
+        <input
           type='text'
           name={name}
+          className={errorClass}
           value={defaultVal}
           onChange={e => onChange(name, e.target.value)}
           placeholder={placeholder}/>
-      </label>
+      </>
     )
   }
 }
@@ -64,7 +76,11 @@ class SubmitButton extends Component {
     const { title, onClick } = this.props
 
     return (
-      <button onClick={onClick}>{title}</button>
+      <button
+        className={'btn'}
+        onClick={onClick}>
+          {title}
+      </button>
     )
   }
 }
@@ -74,9 +90,10 @@ export default class TransactionForm extends Component {
     super(props)
 
     this.state = {
+      gas: false,
       amount: false,
       recipient: false,
-      formError: false
+      formError: []
     }
 
     this.validateForm = this.validateForm.bind(this)
@@ -89,21 +106,22 @@ export default class TransactionForm extends Component {
         continue
       }
       if (!this.state[key]) {
+        let newFormError = this.state.formError
+        newFormError.push(key)
         this.setState({
-          formError: true
+          formError: newFormError
         })
-        return
       }
     }
 
-    if (this.props.onSubmit) {
+    if (this.props.onSubmit && this.state.formError.length === 0) {
       this.props.onSubmit(this.state)
     }
   }
 
   updateFieldValue (field, value) {
     let newState = {
-      formError: false
+      formError: []
     }
     newState[field] = value
     this.setState(newState)
@@ -112,36 +130,52 @@ export default class TransactionForm extends Component {
   get batAmounts () {
     return [
       {
-        value: '',
-        text: 'Select a value'
+        value: '5', 
+        text: '5 BAT'
       },
       {
         value: '10', 
-        text: '10'
+        text: '10 BAT'
       },
       {
         value: '20', 
-        text: '20'
+        text: '20 BAT'
       },
       {
         value: '30', 
-        text: '30'
+        text: '30 BAT'
       },
       {
         value: '40', 
-        text: '40'
+        text: '40 BAT'
       }
     ]
   }
 
+  get gasAmounts () {
+    return [
+      {
+        value: '1', 
+        text: '1 BAT'
+      },
+      {
+        value: '5', 
+        text: '5 BAT'
+      },
+      {
+        value: '10', 
+        text: '10 BAT'
+      }
+    ]    
+  }
+
   render () {
     const { toAddress, userAddress, userBalance } = this.props
-    const formClass = this.state.formError ? 'error' : ''
 
     return (
-      <div className={formClass}>
+      <div className='form'>
         {
-          userAddress.length > 0
+          userAddress.length === 2
           ? <>
               <h3>Your Address is: {userAddress}</h3>
               <h4>Your Balance is: {userBalance}</h4>
@@ -150,14 +184,22 @@ export default class TransactionForm extends Component {
         }
         <TextInput
           defaultVal={toAddress}
-          title={'Recipient Address'}
           name={'recipient'}
-          placeholder={'BAT Address'}
+          title={'Address'}
+          error={this.state.formError}
+          placeholder={'Recipient\'s BAT Address'}
           onChange={this.updateFieldValue}/>
         <Select
-          title={'BAT'}
+          title={'Amount of BAT to tip'}
           name={'amount'}
+          error={this.state.formError}
           options={this.batAmounts}
+          onChange={this.updateFieldValue}/>
+        <Select
+          title={'Gas fee for this transaction'}
+          name={'gas'}
+          error={this.state.formError}
+          options={this.gasAmounts}
           onChange={this.updateFieldValue}/>
         <SubmitButton
           onClick={this.validateForm}
